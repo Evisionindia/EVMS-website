@@ -13,16 +13,18 @@ Local implementation verification only; not production sign-off.
 - Mirror fixture sequence v1.1.0 → v1.1.1 without website edits; repeat run, missing asset repair, edited notes, integrity checks and conflict rejection.
 - Rendered desktop/mobile homepage and contact/about views inspected. Subsequent workflow redesign homepage screenshots inspected.
 - Dependencies: npm audit zero known vulnerabilities at check time.
-- Core checkout unchanged at e97be6a.
+- Core v1.1.1 release source committed at `9f07cc0`; website source and this verification record are committed on `main`.
+- Actual v1.1.1 Client and Owner installers mirrored from the source repository. Source and destination PE structure, byte size and SHA-256 were verified; both releases are stable/latest and not prereleases.
+- Release README, manifest, SBOM and provenance mapping are present on the website release.
 
 ## Not verified / remaining activation
-- Actual GitHub Actions run, authorized source access, real customer EXE mirror/upload/download. No publication authorized or performed.
+- Actual scheduled/manual GitHub Actions run and long-term synchronization monitoring. The authorized v1.1.1 synchronization was executed directly and verified; the workflow itself has not been observed in GitHub Actions.
 - Production SMTP provider/inbox delivery: PRODUCTION EMAIL CONFIGURATION REQUIRED.
 - Real private Google Sheet synchronization: credentials/configuration required.
 - Railway, Hostinger, Docker container runtime, deployed TLS/proxy/session behavior.
 - Actual production owner account provisioning and business retention policy.
 - Legal company name, office address, approved terms/social links: not supplied in the accessible material; omitted rather than invented.
-- Code signing, malware analysis, universal camera compatibility, AI accuracy, full-grid throughput, real LDAP/multi-host failover guarantees are not certified by website checks.
+- Code signing is absent for v1.1.1. Malware analysis, universal camera compatibility, AI accuracy, full-grid throughput, real LDAP and multi-host failover guarantees are not certified by website checks.
 - Automated accessibility checks are not a full assistive-technology audit; no Lighthouse score/performance guarantee is claimed.
 
 Artifacts: ignored artifacts/audit-browser.json and screenshots, browser-check.json, content-audit.json. Fixtures contain labelled synthetic leads and release bytes only. No credentials saved in source.

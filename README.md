@@ -4,7 +4,7 @@ Standalone product website and private lead workspace.
 Repository: https://github.com/Evisionindia/EVMS-website
 
 ## Current state
-Implemented and tested locally. **Not production sign-off.** GitHub release automation must be activated after an authorized push. Real email, Google Sheets, release transfers and cloud deployment still require external acceptance.
+Implemented and tested locally. **Not production sign-off.** EVMS v1.1.1 Client and Owner installers are published in the source repository and byte-verified in this repository's stable mirror release. Scheduled GitHub Actions, real email, Google Sheets and cloud deployment still require external acceptance.
 
 ## Included
 - Separate product, workflow, deployment, company, contact, downloads and privacy pages.
@@ -52,4 +52,4 @@ SMTP and optional Google credentials stay server-side. Enable one scheduler only
 - [Troubleshooting](documentation/TROUBLESHOOTING.md)
 - [Assets and copy](documentation/ASSETS.md)
 
-No website commit, push or release publication has been performed in this task.
+Website source is pushed on `main`. The v1.1.1 mirrored release is published separately with verified installer provenance in `evms-mirror.json`.

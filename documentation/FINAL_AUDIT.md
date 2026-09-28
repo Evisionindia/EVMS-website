@@ -1,22 +1,22 @@
 # EVMS public website — final audit and remediation
 
-Date: 28 September 2026. Scope: standalone Evisionindia/EVMS-website checkout only. Core revision inspected read-only: e97be6a. No commits, pushes, release publication or cloud deployment.
+Date: 28 September 2026. Scope: standalone `Evisionindia/EVMS-website` checkout and its release mirror. Core v1.1.1 source revision: `9f07cc0`. Website source and release were pushed; cloud deployment was not performed.
 
 ## Outcome
-Implemented a product-specific multi-page presentation, repaired unbounded dynamic requests, centralized company/capability data, hardened lead/owner flows, and implemented automatic release mirroring. Local tests support these code-level results; external production operation is NOT VERIFIED.
+Implemented a product-specific multi-page presentation, repaired unbounded dynamic requests, centralized company/capability data, hardened lead/owner flows, and implemented automatic release mirroring. Local tests and the verified v1.1.1 mirror support these results; external production hosting remains unverified.
 
 ## Issues, root causes and fixes
 | Finding | Root cause and affected code | Repair | Evidence / remaining risk |
 |---|---|---|---|
 | Product/release loading could persist | public/app.js had fetch without deadlines; no schema/empty/retry handling | shared 10-second loader, explicit states, safe initial/no-JS copy | browser injected success, empty, invalid JSON/schema, HTTP errors, dropped request and timeout |
-| Downloads tied to core | config + latest-only resolver; no mirror/history | website mirror default, cached catalog, history and real latest metadata | two-version fixture; real GitHub access pending |
-| No automatic release update | no Actions/mapping pipeline | hourly + dispatch + manual workflow, checksum/size/PE verification, draft-before-publish, durable mapping | mirror repeat/missing/corrupt/conflict tests pass; workflow not yet installed remotely |
+| Downloads tied to core | config + latest-only resolver; no mirror/history | website mirror default, cached catalog, history and real latest metadata | two-version fixture plus byte-verified v1.1.1 source-to-mirror publication |
+| No automatic release update | no Actions/mapping pipeline | hourly + dispatch + manual workflow, checksum/size/PE verification, draft-before-publish, durable mapping | direct v1.1.1 sync passed; scheduled/manual Actions execution remains unobserved |
 | Generic expensive hero | eager Three.js decorative lens | semantic interactive 2.5D EVMS workflow, no WebGL dependency | no-JS and reduced-motion tests; 56 responsive page checks |
 | Company duplication | repeated names/emails/phones in templates | content/company.json drives public pages | published known support/sales values; unknown legal/address fields omitted |
 | Capabilities lacked verification metadata | existing evidence text without date/version flags | verified/version/date fields, public filter and content audit | actual core source and existing acceptance limitations reconciled; no new hardware guarantee |
 | Phone/interest validation incomplete | length-only fields | bounded phone/digit rules and interest allowlist | API rejection tests |
 | Owner filters exposed search strings in URLs | GET search/export UI | POST+CSRF filters/exports, allowlisted sort, source migration/details/export | owner two-port browser checks, session/CSRF/IDOR tests |
-| Private download could hang | no total upstream deadline | 120-second signal and restricted redirect hosts | token isolation fixture; real EXE stream not verified |
+| Private download could hang | no total upstream deadline | 120-second signal and restricted redirect hosts | token isolation fixture; real GitHub EXE transfer and re-hash verified |
 | Sheets privacy check could miss another permissions page | only first response inspected | fail closed on pagination; expanded source column | privacy/retry fixture; live sheet not configured |
 | Stale frontend could mismatch HTML | hour-long unversioned JS cache | revalidation and HTML/runtime no-store | response header checks |
 | Privacy link stale / SEO incomplete | removed home anchor, inconsistent metadata | shared page metadata, correct Contact link, Twitter and CSP-hashed Organization JSON-LD | rendered route/header checks |
@@ -43,13 +43,12 @@ Main changes: scripts/pages.js; public/app.js, request.js, workflow.js, workflow
 Full list: [file inventory](FILE_INVENTORY.md). No website files were stored in the core repo.
 
 ## Production activation still required
-1. Explicit authorization before website commit/push.
-2. Default-branch Actions enabled; source read access via SOURCE_RELEASE_TOKEN if private. Destination uses scoped built-in GITHUB_TOKEN with Contents: write.
-3. Run real sync and verify customer installer download, hash and notes from the deployed Downloads page.
-4. Deploy Node service with persistent SQLite, HTTPS, exact origins/proxy settings; provision real owner credentials privately.
-5. Configure and test SMTP; optionally configure private Sheets. No actual sales email sent.
-6. Verify target Railway/Hostinger/Docker runtime, backups and retention policy.
-7. Supply approved legal company/address/terms/social information if these should be published.
+1. Confirm the default-branch Actions workflow runs with source read access via `SOURCE_RELEASE_TOKEN` when the source is private. Destination uses the scoped built-in `GITHUB_TOKEN` with Contents: write.
+2. Verify release rendering and installer download from the deployed Downloads page. Direct GitHub source-to-mirror transfer and hashes are verified; deployed website access is separate.
+3. Deploy the Node service with persistent SQLite, HTTPS, exact origins/proxy settings; provision real owner credentials privately.
+4. Configure and test SMTP; optionally configure private Sheets. No actual sales email was sent.
+5. Verify target Railway/Hostinger/Docker runtime, backups and retention policy.
+6. Supply approved legal company/address/terms/social information if these should be published.
 
 Exact runtime variables: [ENVIRONMENT.md](ENVIRONMENT.md). Deployment steps: [DEPLOYMENT.md](DEPLOYMENT.md). Source/mirror permissions and workflow recovery: [GITHUB_RELEASES.md](GITHUB_RELEASES.md). Security details: [SECURITY.md](SECURITY.md).
 
