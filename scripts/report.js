@@ -1,0 +1,1 @@
+import {config} from '../server/config.js';import {openDatabase} from '../server/db.js';import {reportService} from '../server/reports.js';const cfg=config(),db=openDatabase(cfg.dbPath);try{await reportService(db,cfg).run();console.log('Reporting pass completed. Inspect owner report statuses for delivery outcomes.');}finally{db.close();}

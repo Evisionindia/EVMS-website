@@ -1,0 +1,11 @@
+import fs from 'node:fs';import path from 'node:path';
+const ignored=new Set(['node_modules','.git','dist','data','artifacts']);
+function walk(dir='.') {return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>ignored.has(e.name)||e.name.endsWith('.log')||e.name==='.env'?[]:e.isDirectory()?walk(path.join(dir,e.name)):[path.join(dir,e.name).replaceAll('\\','/')]);}
+const files=walk(),issues=[];
+for(const f of files){if(!/\.(?:js|json|md|html|css|example)$/.test(f))continue;const t=fs.readFileSync(f,'utf8');if(/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/.test(t)||/\b(?:ghp_|github_pat_)[a-zA-Z0-9_]{30,}/.test(t))issues.push(f+': secret-shaped content');if(/[A-Z]:\\Users\\/i.test(t))issues.push(f+': developer absolute path');}
+for(const f of files.filter(x=>x.startsWith('public/'))){if(!/\.(js|html)$/.test(f))continue;const t=fs.readFileSync(f,'utf8');if(/GITHUB_TOKEN|SMTP_PASSWORD|GOOGLE_PRIVATE_KEY|localStorage/.test(t))issues.push(f+': unexpected private configuration/storage');}
+const features=JSON.parse(fs.readFileSync('content/verified-features.json','utf8'));for(const f of features)if(f.public&&(f.status!=='VERIFIED'||!f.verified||!f.version_verified||!f.last_verified||!f.evidence||!f.limitation))issues.push(f.id+': unverified public feature');
+for(const f of files.filter(x=>x.endsWith('.md'))){const t=fs.readFileSync(f,'utf8');for(const m of t.matchAll(/\]\(([^)]+)\)/g)){const link=m[1].split('#')[0];if(link&&!/^https?:/.test(link)&&!fs.existsSync(path.resolve(path.dirname(f),link)))issues.push(f+': broken link '+link);}}
+fs.mkdirSync('artifacts',{recursive:true});fs.writeFileSync('artifacts/content-audit.json',JSON.stringify({files:files.length,publicFeatures:features.filter(f=>f.public).length,issues},null,2));
+fs.writeFileSync('documentation/FILE_INVENTORY.md','# Website file inventory\n\nREADME.md is the pre-existing file updated in this checkout. Other listed application files were added. Generated builds, private data, dependencies and test output are excluded.\n\n'+files.filter(f=>f!=='documentation/FILE_INVENTORY.md').map(f=>'- '+f).join('\n')+'\n');
+console.log(JSON.stringify({files:files.length,publicFeatures:features.filter(f=>f.public).length,issues},null,2));if(issues.length)process.exitCode=1;

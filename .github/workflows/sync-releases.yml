@@ -1,0 +1,27 @@
+name: Synchronize approved EVMS releases
+on:
+  schedule:
+    - cron: '17 * * * *'
+  repository_dispatch:
+    types: [evms-release-published]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: evms-release-mirror
+  cancel-in-progress: false
+jobs:
+  mirror:
+    if: github.repository == 'Evisionindia/EVMS-website'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '22'
+      - name: Verify and synchronize releases
+        run: node scripts/sync-releases.js
+        env:
+          SOURCE_RELEASE_TOKEN: ${{ secrets.SOURCE_RELEASE_TOKEN }}
+          MIRROR_TOKEN: ${{ github.token }}

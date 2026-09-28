@@ -1,0 +1,11 @@
+{
+  "sourceRepository": "AbhishekSamrat/VMS-AI-Analytics",
+  "mirrorRepository": "Evisionindia/EVMS-website",
+  "requiredRoles": [
+    "Client",
+    "Owner"
+  ],
+  "maxAssetBytes": 536870912,
+  "mappingAsset": "evms-mirror.json",
+  "syncTag": "release-sync-status"
+}

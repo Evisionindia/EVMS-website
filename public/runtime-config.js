@@ -1,0 +1,1 @@
+window.EVMS_CONFIG={apiBase:''};
