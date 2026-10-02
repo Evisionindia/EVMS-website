@@ -25,7 +25,7 @@ export function reportService(db,cfg,{mailer,googleFetch=fetch}={}){
     if(!cfg.smtp.host||!cfg.emailFrom){db.prepare("UPDATE reports SET status='configuration_required',last_error='EMAIL_CONFIGURATION_REQUIRED',next_attempt=? WHERE day=?").run(Date.now()+3600000,job.day);continue;}
     try{
      const rows=db.prepare('SELECT * FROM leads WHERE day=? ORDER BY submitted_at').all(job.day);
-     await send({from:cfg.emailFrom,to:cfg.recipient,subject:'EVMS leads — '+job.day,messageId:'<evms-report-'+job.day+'@'+new URL(cfg.site).hostname+'>',text:rows.length+' submissions for '+job.day+' ('+cfg.timezone+'). New: '+rows.filter(r=>r.status==='new').length+'. CSV attached.',attachments:[{filename:'leads-'+job.day+'.csv',content:csv(rows),contentType:'text/csv'}]});
+     await send({from:cfg.emailFrom,to:cfg.recipient,subject:'E-VMS leads — '+job.day,messageId:'<e-vms-report-'+job.day+'@'+new URL(cfg.site).hostname+'>',text:rows.length+' submissions for '+job.day+' ('+cfg.timezone+'). New: '+rows.filter(r=>r.status==='new').length+'. CSV attached.',attachments:[{filename:'leads-'+job.day+'.csv',content:csv(rows),contentType:'text/csv'}]});
      db.prepare("UPDATE reports SET status='accepted',sent_at=?,attempts=attempts+1,last_error=NULL WHERE day=?").run(new Date().toISOString(),job.day);audit(db,null,'report.provider_accepted',job.day);
     }catch{db.prepare("UPDATE reports SET status='failed',attempts=attempts+1,last_error='PROVIDER_FAILED',next_attempt=? WHERE day=?").run(Date.now()+Math.min(86400000,60000*2**Math.min(job.attempts,10)),job.day);}
    }

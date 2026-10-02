@@ -2,11 +2,15 @@ import {createHash} from 'node:crypto';
 export const checksum=b=>'sha256:'+createHash('sha256').update(b).digest('hex');
 export const isPE=b=>b.length>=68&&b[0]===77&&b[1]===90&&b.readUInt32LE(60)<=b.length-4&&b.subarray(b.readUInt32LE(60),b.readUInt32LE(60)+4).equals(Buffer.from([80,69,0,0]));
 export const eligible=r=>!r.draft&&/^v?\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(r.tag_name)&&Number.isSafeInteger(r.id)&&Number.isFinite(Date.parse(r.published_at));
+const installerName=(role,version)=>role==='Pro'?`E-VMS-Pro-${version}-Windows-x64.exe`:`E-VMS-${version}-Windows-x64.exe`;
 export function approvedAssets(r,policy){
  const version=r.tag_name.replace(/^v/,'');
- const approved=(r.assets||[]).filter(a=>policy.requiredRoles.some(role=>a.name==='EVMS-'+role+'-Setup-'+version+'-x64.exe'));
- if(policy.requiredRoles.some(role=>!approved.some(a=>a.name==='EVMS-'+role+'-Setup-'+version+'-x64.exe')))throw Error('Release lacks required Client/Owner installers');
- if(new Set(approved.map(a=>a.name)).size!==approved.length||approved.some(a=>a.state!=='uploaded'||!Number.isSafeInteger(a.id)||!Number.isSafeInteger(a.size)||a.size<2||a.size>policy.maxAssetBytes))throw Error('Invalid installer metadata');
+ const installers=policy.requiredRoles.map(role=>installerName(role,version));
+ const updater=policy.requiredUpdaterAssets?['client.yml','owner.yml',...installers.map(name=>name+'.blockmap')]:[];
+ const expected=new Set([...installers,...updater]);
+ const approved=(r.assets||[]).filter(a=>expected.has(a.name));
+ if([...expected].some(name=>!approved.some(a=>a.name===name)))throw Error('Release lacks required E-VMS installers or updater metadata');
+ if(new Set(approved.map(a=>a.name)).size!==approved.length||approved.some(a=>a.state!=='uploaded'||!Number.isSafeInteger(a.id)||!Number.isSafeInteger(a.size)||a.size<2||a.size>policy.maxAssetBytes))throw Error('Invalid approved release asset metadata');
  return approved;
 }
 export async function syncRelease(source,sourceApi,mirrorApi,policy){
@@ -17,7 +21,12 @@ export async function syncRelease(source,sourceApi,mirrorApi,policy){
  if(/(?:ghp_|github_pat_)[a-zA-Z0-9_]{20,}|-----BEGIN .*PRIVATE KEY|(?:password|token|secret)\s*[:=]\s*\S+/i.test(notes))throw Error('Release notes require privacy review');
  const assets=approvedAssets(source,policy);
  const prepared=[];
- for(const a of assets){const data=await sourceApi.bytes(sourceRepo,a.id,policy.maxAssetBytes);if(data.length!==a.size||!isPE(data))throw Error('Installer byte/size verification failed');const digest=checksum(data);if(a.digest&&a.digest!==digest)throw Error('Source checksum mismatch');prepared.push({...a,data,digest});}
+ for(const a of assets){
+  const data=await sourceApi.bytes(sourceRepo,a.id,policy.maxAssetBytes);if(data.length!==a.size)throw Error('Approved release asset size verification failed');
+  if(a.name.endsWith('.exe')&&!isPE(data))throw Error('Installer byte verification failed');
+  if(a.name.endsWith('.yml')){const role=a.name==='owner.yml'?'Owner':'Pro',installer=installerName(role,source.tag_name.replace(/^v/,'')),text=data.toString('utf8');if(!text.includes(`url: ${installer}`)||!/^\s*sha512:\s*\S+/m.test(text)||!/^\s*size:\s*\d+/m.test(text))throw Error('Updater metadata does not reference the approved installer');}
+  const digest=checksum(data);if(a.digest&&a.digest!==digest)throw Error('Source checksum mismatch');prepared.push({...a,data,digest});
+ }
  let mirror=await mirrorApi.request('/repos/'+repo+'/releases/tags/'+encodeURIComponent(source.tag_name));
  if(mirror&&!(mirror.body||'').includes('EVMS-MIRROR source='+sourceRepo+' id='+source.id))throw Error('Mirror tag belongs to another release; refusing overwrite');
  const body=notes+'\n\n---\nSource release: '+source.html_url+'\nSource published: '+source.published_at+'\n<!-- EVMS-MIRROR source='+sourceRepo+' id='+source.id+' -->';

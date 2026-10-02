@@ -16,7 +16,7 @@ function releaseCard(r){
  if(r.notes){const details=el('details'),summary=el('summary','Release notes');details.append(summary,el('pre',r.notes));card.append(details);}
  const notes=el('a','View GitHub release ↗','text-link');notes.href=r.url;notes.rel='noopener';card.append(notes);
  const grid=el('div',null,'release-assets');
- for(const a of r.assets){const item=el('div',null,'asset');item.append(el('strong',a.name.includes('Owner')?'EVMS Owner':'EVMS Client'),el('small',a.name),el('p',(a.size/1048576).toFixed(1)+' MiB · Windows x64'));const link=el('a','Download installer ↗','button');link.href=a.url;link.rel='noopener';item.append(link);if(a.digest)item.append(el('small','SHA-256 (GitHub): '+a.digest.replace('sha256:','')));grid.append(item);}
+ for(const a of r.assets){const owner=!a.name.includes('-Pro-')&&(a.name.startsWith('E-VMS-')||a.name.includes('Owner'));const item=el('div',null,'asset');item.append(el('strong',owner?'E-VMS · Owner application':'E-VMS Pro · Client application'),el('small',a.name),el('p',(a.size/1048576).toFixed(1)+' MiB · Windows x64'));const link=el('a','Download installer ↗','button');link.href=a.url;link.rel='noopener';item.append(link);if(a.digest)item.append(el('small','SHA-256 (GitHub): '+a.digest.replace('sha256:','')));grid.append(item);}
  card.append(grid);return card;
 }
 async function releases(){const box=document.querySelector('#release');box.textContent='Checking published release information…';box.dataset.state='loading';

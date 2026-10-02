@@ -1,9 +1,11 @@
 import {github} from './github.js';
+const installerNames=version=>new Set([`E-VMS-Pro-${version}-Windows-x64.exe`,`E-VMS-${version}-Windows-x64.exe`,`EVMS-Client-Setup-${version}-x64.exe`,`EVMS-Owner-Setup-${version}-x64.exe`]);
 export function normalizeRelease(raw,cfg){
  if(raw.draft||raw.prerelease||!/^v?\d+\.\d+\.\d+$/.test(raw.tag_name))throw Error('Not a stable release');
  const prefix='https://github.com/'+cfg.repo+'/releases/';
  if(raw.html_url!==prefix+'tag/'+raw.tag_name||!Number.isFinite(Date.parse(raw.published_at)))throw Error('Invalid release metadata');
- const assets=(raw.assets||[]).filter(a=>a.state==='uploaded'&&Number.isSafeInteger(a.id)&&Number.isSafeInteger(a.size)&&a.size>0&&['Client','Owner'].some(role=>a.name==='EVMS-'+role+'-Setup-'+raw.tag_name.replace(/^v/,'')+'-x64.exe')&&a.browser_download_url===prefix+'download/'+raw.tag_name+'/'+a.name).map(a=>({id:a.id,name:a.name,size:a.size,url:a.browser_download_url,digest:/^sha256:[a-f0-9]{64}$/.test(a.digest||'')?a.digest:null}));
+ const approvedNames=installerNames(raw.tag_name.replace(/^v/,''));
+ const assets=(raw.assets||[]).filter(a=>a.state==='uploaded'&&Number.isSafeInteger(a.id)&&Number.isSafeInteger(a.size)&&a.size>0&&approvedNames.has(a.name)&&a.browser_download_url===prefix+'download/'+raw.tag_name+'/'+a.name).map(a=>({id:a.id,name:a.name,size:a.size,url:a.browser_download_url,digest:/^sha256:[a-f0-9]{64}$/.test(a.digest||'')?a.digest:null}));
  if(!assets.length)throw Error('No approved installers');
  const body=String(raw.body||'').split('\n\n---\nSource release:')[0].replace(/<!--[\s\S]*?-->/g,'').slice(0,6000);
  return {tag:raw.tag_name,title:String(raw.name||raw.tag_name).slice(0,200),publishedAt:raw.published_at,url:raw.html_url,notes:body,assets};

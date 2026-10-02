@@ -1,6 +1,6 @@
 {
   "displayName": "E-Vision India",
-  "productName": "EVMS",
+  "productName": "E-VMS",
   "tagline": "Your security. Our priority.",
   "salesEmail": "sales1@evisionindia.com",
   "supportEmail": "rnd@evisionindia.com",
@@ -10,6 +10,6 @@
   "address": null,
   "website": null,
   "socialLinks": [],
-  "description": "E-Vision India provides EVMS, a video management application for camera organization, recording storage, footage review and access management.",
+  "description": "E-Vision India provides E-VMS, a video management application for camera organization, recording storage, footage review and access management.",
   "source": "User-supplied branding and website brief; EVMS server/.env.example public support configuration. Legal name, address and social profiles not verified."
 }

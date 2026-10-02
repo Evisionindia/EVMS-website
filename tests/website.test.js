@@ -21,6 +21,11 @@ test('lead persistence, duplicate protection, SQL/XSS rejection, private data an
  r=await request('/api/owner/leads');assert.equal(r.status,401);
  const headers={Cookie:cookie,'X-CSRF-Token':session.csrf};
  assert.equal((await request('/api/owner/leads','GET',null,headers)).status,200);
+ for(const route of ['/api/owner/overview','/api/owner/trials','/api/owner/licenses','/api/owner/audit','/api/owner/settings','/api/owner/company']){
+  const protectedResponse=await request(route,'GET',null,headers);assert.equal(protectedResponse.status,200,route);
+ }
+ const overview=await (await request('/api/owner/overview','GET',null,headers)).json();assert.equal(overview.metrics.demoLeads,2);assert.equal(overview.runtimeLicenseStatus,'NOT_CONNECTED');
+ const auditRows=await (await request('/api/owner/audit','GET',null,headers)).json();assert.ok(auditRows.rows.some(row=>row.action==='demo.request.created'&&row.result==='SUCCESS'));
  assert.equal((await request('/api/owner/leads/'+ids[0].id,'PATCH',{status:'contacted'},{Cookie:cookie})).status,403);
  assert.equal((await request('/api/owner/leads/'+ids[0].id,'PATCH',{status:'contacted'},headers)).status,200);
  r=await request('/api/owner/export?format=xlsx','GET',null,headers);assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');const book=new ExcelJS.Workbook();await book.xlsx.load(Buffer.from(await r.arrayBuffer()));assert.equal(book.worksheets[0].rowCount,3);
@@ -39,7 +44,7 @@ test('validation, oversized requests, throttling and expired sessions',async t=>
 });
 test('database failure never claims lead saved',async t=>{const {request,db}=await fixture(t);db.exec('DROP TABLE sheets_jobs');const r=await request('/api/leads','POST',body);assert.equal(r.status,500);assert.equal(db.prepare('SELECT COUNT(*) n FROM leads').get().n,0);});
 test('release caching, stale identity, asset validation and token isolation',async()=>{
- const db=openDatabase(':memory:'),c=cfg();c.githubToken='test-only-token';let calls=0;const raw={tag_name:'v1.1.0',published_at:'2026-09-01T00:00:00Z',html_url:'https://github.com/'+c.repo+'/releases/tag/v1.1.0',assets:[{id:1,name:'EVMS-Client-Setup-1.1.0-x64.exe',state:'uploaded',size:1234,browser_download_url:'https://github.com/'+c.repo+'/releases/download/v1.1.0/EVMS-Client-Setup-1.1.0-x64.exe'}]};
+ const db=openDatabase(':memory:'),c=cfg();c.githubToken='test-only-token';let calls=0;const raw={tag_name:'v1.1.0',published_at:'2026-09-01T00:00:00Z',html_url:'https://github.com/'+c.repo+'/releases/tag/v1.1.0',assets:[{id:1,name:'E-VMS-Pro-1.1.0-Windows-x64.exe',state:'uploaded',size:1234,browser_download_url:'https://github.com/'+c.repo+'/releases/download/v1.1.0/E-VMS-Pro-1.1.0-Windows-x64.exe'}]};
  const resolve=releaseResolver(db,c,async(_u,o)=>{calls++;assert.equal(o.headers.Authorization,'Bearer test-only-token');return{ok:true,json:async()=>raw};});
  assert.equal((await resolve()).tag,'v1.1.0');assert.equal((await resolve()).stale,false);assert.equal(calls,1);assert.ok(!JSON.stringify(await resolve()).includes(c.githubToken));
  db.prepare('UPDATE release_cache SET checked=?').run(Date.now()-700000);assert.equal((await releaseResolver(db,c,async()=>{throw Error();})()).stale,true);
@@ -60,7 +65,12 @@ test('Sheets refuses public sharing and retries the same reserved row',async()=>
  await syncSheet(c,{row_number:2},{id:'one'},options);await syncSheet(c,{row_number:2},{id:'one'},options);assert.equal(urls[1],urls[3]);assert.match(urls[1],/valueInputOption=RAW/);
  await assert.rejects(()=>syncSheet(c,{row_number:2},{id:'one'},{...options,fetcher:async()=>({ok:true,json:async()=>({permissions:[{type:'anyone'}]})})}));
 });
-test('production origins and HTTPS fail closed',()=>{assert.throws(()=>config({NODE_ENV:'production',PUBLIC_SITE_URL:'http://example.com'}));assert.throws(()=>config({COOKIE_SAME_SITE:'none'}));assert.equal(config({NODE_ENV:'production',PUBLIC_SITE_URL:'https://example.com',PORT:'6200',API_BASE_URL:'https://api.example.com'}).port,6200);});
+test('production origins and HTTPS fail closed',()=>{
+ assert.throws(()=>config({NODE_ENV:'production',PUBLIC_SITE_URL:'http://example.com'}));
+ assert.throws(()=>config({COOKIE_SAME_SITE:'none'}));
+ assert.throws(()=>config({NODE_ENV:'production',PUBLIC_SITE_URL:'https://example.com',CORE_LICENSE_REGISTRATION_URL:'http://core.example.com/api/license/register-website-trial'}));
+ assert.equal(config({NODE_ENV:'production',PUBLIC_SITE_URL:'https://example.com',PORT:'6200',API_BASE_URL:'https://api.example.com',CORE_LICENSE_REGISTRATION_URL:'https://core.example.com/api/license/register-website-trial'}).port,6200);
+});
 
 test('expired owner sessions and unknown IDs remain private',async t=>{
  const {db,request}=await fixture(t);
@@ -83,7 +93,7 @@ test('private asset redirects never receive the GitHub token',async()=>{
  const {proxyInstaller}=await import('../server/download.js');const {PassThrough}=await import('node:stream');
  const stream=new PassThrough();stream.attachment=()=>stream;stream.type=()=>stream;stream.set=()=>stream;
  const chunks=[];stream.on('data',c=>chunks.push(c));const c=cfg();c.githubToken='fixture-secret';const calls=[];
- await proxyInstaller(stream,c,{id:42,name:'EVMS-Client-Setup-1.1.0-x64.exe'},async(url,options)=>{calls.push({url:String(url),options});return calls.length===1?new Response(null,{status:302,headers:{location:'https://release-assets.githubusercontent.com/test'}}):new Response('fixture bytes');});
+ await proxyInstaller(stream,c,{id:42,name:'E-VMS-Pro-1.1.0-Windows-x64.exe'},async(url,options)=>{calls.push({url:String(url),options});return calls.length===1?new Response(null,{status:302,headers:{location:'https://release-assets.githubusercontent.com/test'}}):new Response('fixture bytes');});
  assert.equal(calls[0].options.headers.Authorization,'Bearer fixture-secret');assert.equal(calls[1].options.headers,undefined);assert.equal(Buffer.concat(chunks).toString(),'fixture bytes');
  const blocked=new PassThrough();await assert.rejects(()=>proxyInstaller(blocked,c,{id:42,name:'fixture.exe'},async()=>new Response(null,{status:302,headers:{location:'http://127.0.0.1/private'}})));
 });

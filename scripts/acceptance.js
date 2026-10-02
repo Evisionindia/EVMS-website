@@ -3,12 +3,12 @@ fs.mkdirSync('artifacts',{recursive:true});
 const db=openDatabase(':memory:'),cfg=config({PUBLIC_SITE_URL:'http://127.0.0.1:4173'}),server=createApp(db,cfg).listen(4173,'127.0.0.1');
 const browser=await chromium.launch({channel:'chrome',headless:true}),context=await browser.newContext(),page=await context.newPage(),errors=[],results=[];
 page.on('pageerror',e=>errors.push(e.message));
-const fixtureRelease=tag=>({tag,title:'EVMS '+tag,publishedAt:'2026-09-28T00:00:00Z',notes:'Fixture release notes',url:'https://github.com/Evisionindia/EVMS-website/releases/tag/'+tag,assets:[{id:1,name:'EVMS-Client-Setup-'+tag.slice(1)+'-x64.exe',size:1234,url:'https://github.com/Evisionindia/EVMS-website/releases/download/'+tag+'/EVMS-Client-Setup-'+tag.slice(1)+'-x64.exe'}]});
+const fixtureRelease=tag=>({tag,title:'E-VMS '+tag,publishedAt:'2026-09-28T00:00:00Z',notes:'Fixture release notes',url:'https://github.com/Evisionindia/EVMS-website/releases/tag/'+tag,assets:[{id:1,name:'E-VMS-Pro-'+tag.slice(1)+'-Windows-x64.exe',size:1234,url:'https://github.com/Evisionindia/EVMS-website/releases/download/'+tag+'/E-VMS-Pro-'+tag.slice(1)+'-Windows-x64.exe'}]});
 await page.route('**/api/releases',r=>r.fulfill({json:{releases:[fixtureRelease('v1.1.1'),fixtureRelease('v1.1.0')],latestTag:'v1.1.1',sync:{status:'ok'}}}));
 try{
  for(const width of [1440,1280,1024,768,480,390,320]){
   await page.setViewportSize({width,height:900});
-  for(const path of ['/','/product','/workflow','/deployment','/downloads','/about','/contact','/privacy']){
+  for(const path of ['/','/product','/workflow','/deployment','/downloads','/trial','/about','/contact','/privacy']){
    const response=await page.goto(cfg.site+path);assert.equal(response.status(),200);
    if(path==='/product')await page.locator('.feature-card').first().waitFor();
    if(path==='/downloads'){await page.getByRole('heading',{name:'Previous releases',exact:true}).waitFor();assert.equal(await page.locator('.release-entry').count(),2);}
