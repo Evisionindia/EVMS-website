@@ -24,6 +24,7 @@ README.md is the pre-existing file updated in this checkout. Other listed applic
 - documentation/LEAD_SYSTEM.md
 - documentation/LIVE_CHECK.md
 - documentation/SECURITY.md
+- documentation/TRIAL_LICENSING.md
 - documentation/TROUBLESHOOTING.md
 - documentation/VERIFICATION.md
 - eslint.config.js
@@ -48,6 +49,8 @@ README.md is the pre-existing file updated in this checkout. Other listed applic
 - public/request.js
 - public/runtime-config.js
 - public/styles.css
+- public/trial.html
+- public/trial.js
 - public/workflow.css
 - public/workflow.html
 - public/workflow.js
@@ -66,13 +69,16 @@ README.md is the pre-existing file updated in this checkout. Other listed applic
 - scripts/sync-releases.js
 - server/app.js
 - server/config.js
+- server/core-license.js
 - server/db.js
 - server/download.js
 - server/github.js
 - server/index.js
+- server/license.js
 - server/releases.js
 - server/reports.js
 - server/sheets.js
 - tests/hardening.test.js
 - tests/mirror.test.js
+- tests/trial.test.js
 - tests/website.test.js

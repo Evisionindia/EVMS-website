@@ -1,7 +1,7 @@
 # Automated release distribution
 
 ## Source and destination
-Authoritative engineering releases: `AbhishekSamrat/VMS-AI-Analytics`.
+Authoritative engineering releases: `Evisionindia/E-VMS`.
 Customer mirror: `Evisionindia/EVMS-website`.
 The public API defaults to the mirror, not the core. Values and asset policy live in content/releases.json.
 
@@ -25,12 +25,12 @@ To add immediate dispatch later, an authorized source publisher POSTs `{"event_t
 Published semantic-version releases, including prereleases with matching installer version names. Drafts and non-version operational tags are ignored. Stable latest designation follows the source latest endpoint; prereleases never become latest.
 
 Only BOTH required installer roles:
-- EVMS-Client-Setup-VERSION-x64.exe
-- EVMS-Owner-Setup-VERSION-x64.exe
+- E-VMS-Pro-VERSION-Windows-x64.exe
+- E-VMS-VERSION-Windows-x64.exe
 
 Each file must be uploaded, within 512 MiB, download successfully, match declared size, have DOS MZ and PE signatures, and match source SHA-256 when supplied. SHA-256 is always calculated and the destination download is checked. This verifies transfer integrity/file structure, not code signing or malware safety.
 
-Database files, dumps, source archives, backups, credentials, migrations, arbitrary release attachments and updater YAML/blockmaps are not mirrored. Installer mirroring does not reconfigure the EVMS desktop updater.
+Legacy `EVMS-Client-Setup-*` and `EVMS-Owner-Setup-*` names remain accepted only for historical release compatibility. New releases must include `client.yml`, `owner.yml`, and the exact installer `.blockmap` files; synchronization verifies each channel names the approved installer before mirroring it. Database files, dumps, source archives, backups, credentials, migrations and arbitrary release attachments are not mirrored. The E-VMS desktop updater reads its edition-specific channel from this customer distribution repository.
 
 New mirror releases remain drafts until assets and mapping are complete. Tag collisions unrelated to this source are rejected. Repeated runs compare the existing bytes and metadata; missing assets are uploaded, unchanged assets are not reuploaded. Edited notes are synchronized. A same-name published installer whose bytes changed is rejected: publish a new version. An incomplete source does not fabricate a release.
 

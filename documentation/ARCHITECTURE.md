@@ -1,5 +1,5 @@
 # Architecture
-Standalone Node/Express website, SQLite WAL database, bundled browser JavaScript and generated multi-page HTML. No EVMS-core runtime dependency.
+Node/Express website, SQLite WAL database, bundled browser JavaScript and generated multi-page HTML. Public content, demo requests and release browsing remain standalone. Trial issuance uses a server-to-server, least-privilege E-VMS core registration contract; no privileged credential is exposed to browser code.
 
 ## Public pages
 Home, Product, How it works, Deploy, Downloads, Company, Contact and Privacy. Templates in scripts/pages.js; generated HTML in public, production build in dist. Navigation/footer/company metadata share content/company.json. Product feature API filters content/verified-features.json to verified public records. Every public feature carries evidence, limitations, verified version/date.
