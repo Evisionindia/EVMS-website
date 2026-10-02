@@ -1,14 +1,22 @@
 import {createHash} from 'node:crypto';
 export const checksum=b=>'sha256:'+createHash('sha256').update(b).digest('hex');
 export const isPE=b=>b.length>=68&&b[0]===77&&b[1]===90&&b.readUInt32LE(60)<=b.length-4&&b.subarray(b.readUInt32LE(60),b.readUInt32LE(60)+4).equals(Buffer.from([80,69,0,0]));
-export const eligible=r=>!r.draft&&/^v?\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(r.tag_name)&&Number.isSafeInteger(r.id)&&Number.isFinite(Date.parse(r.published_at));
+export const eligible=r=>!r.draft&&/^v?\d+\.\d+(?:\.\d+)?(?:-[\w.-]+)?$/.test(r.tag_name)&&Number.isSafeInteger(r.id)&&Number.isFinite(Date.parse(r.published_at));
 const installerName=(role,version)=>role==='Pro'?`E-VMS-Pro-${version}-Windows-x64.exe`:`E-VMS-${version}-Windows-x64.exe`;
+function technicalVersion(r){
+ const versions=(r.assets||[]).flatMap(a=>{const m=/^E-VMS(?:-Pro)?-(\d+\.\d+\.\d+)-Windows-x64\.exe$/.exec(a.name);return m?[m[1]]:[];});
+ const unique=[...new Set(versions)];if(unique.length!==1)throw Error('Release lacks one consistent technical installer version');
+ const tag=r.tag_name.replace(/^v/,'');
+ if(!(unique[0]===tag||(/^\d+\.\d+$/.test(tag)&&unique[0].startsWith(tag+'.'))))throw Error('Release tag and installer version do not match');
+ return unique[0];
+}
 export function approvedAssets(r,policy){
- const version=r.tag_name.replace(/^v/,'');
+ const version=technicalVersion(r);
  const installers=policy.requiredRoles.map(role=>installerName(role,version));
  const updater=policy.requiredUpdaterAssets?['client.yml','owner.yml',...installers.map(name=>name+'.blockmap')]:[];
  const expected=new Set([...installers,...updater]);
- const approved=(r.assets||[]).filter(a=>expected.has(a.name));
+ const supporting=new Set(['README.md','E-VMS-release-manifest.json','E-VMS-sbom.cdx.json']);
+ const approved=(r.assets||[]).filter(a=>expected.has(a.name)||supporting.has(a.name));
  if([...expected].some(name=>!approved.some(a=>a.name===name)))throw Error('Release lacks required E-VMS installers or updater metadata');
  if(new Set(approved.map(a=>a.name)).size!==approved.length||approved.some(a=>a.state!=='uploaded'||!Number.isSafeInteger(a.id)||!Number.isSafeInteger(a.size)||a.size<2||a.size>policy.maxAssetBytes))throw Error('Invalid approved release asset metadata');
  return approved;
@@ -19,12 +27,12 @@ export async function syncRelease(source,sourceApi,mirrorApi,policy){
  if(source.html_url!=='https://github.com/'+sourceRepo+'/releases/tag/'+source.tag_name)throw Error('Unexpected source release URL');
  const notes=String(source.body||'');
  if(/(?:ghp_|github_pat_)[a-zA-Z0-9_]{20,}|-----BEGIN .*PRIVATE KEY|(?:password|token|secret)\s*[:=]\s*\S+/i.test(notes))throw Error('Release notes require privacy review');
- const assets=approvedAssets(source,policy);
+ const version=technicalVersion(source),assets=approvedAssets(source,policy);
  const prepared=[];
  for(const a of assets){
   const data=await sourceApi.bytes(sourceRepo,a.id,policy.maxAssetBytes);if(data.length!==a.size)throw Error('Approved release asset size verification failed');
   if(a.name.endsWith('.exe')&&!isPE(data))throw Error('Installer byte verification failed');
-  if(a.name.endsWith('.yml')){const role=a.name==='owner.yml'?'Owner':'Pro',installer=installerName(role,source.tag_name.replace(/^v/,'')),text=data.toString('utf8');if(!text.includes(`url: ${installer}`)||!/^\s*sha512:\s*\S+/m.test(text)||!/^\s*size:\s*\d+/m.test(text))throw Error('Updater metadata does not reference the approved installer');}
+  if(a.name.endsWith('.yml')){const role=a.name==='owner.yml'?'Owner':'Pro',installer=installerName(role,version),text=data.toString('utf8');if(!text.includes(`url: ${installer}`)||!/^\s*sha512:\s*\S+/m.test(text)||!/^\s*size:\s*\d+/m.test(text))throw Error('Updater metadata does not reference the approved installer');}
   const digest=checksum(data);if(a.digest&&a.digest!==digest)throw Error('Source checksum mismatch');prepared.push({...a,data,digest});
  }
  let mirror=await mirrorApi.request('/repos/'+repo+'/releases/tags/'+encodeURIComponent(source.tag_name));

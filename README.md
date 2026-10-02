@@ -4,7 +4,7 @@ Standalone product website and private lead workspace.
 Repository: https://github.com/Evisionindia/EVMS-website
 
 ## Current state
-Implemented and tested locally. **Not production sign-off.** Existing v1.1.1 release mirroring has automated provenance checks. The new E-VMS branding and automated trial-licence flow in this working tree have not been deployed or pushed. Real SMTP delivery, Google Sheets, signing-key deployment and cloud deployment still require external acceptance.
+Implemented and tested locally. **Not production sign-off.** The stable E-VMS v1.2 source release and its v1.2 website mirror use automated provenance, size and SHA-256 checks. The website source is published on the official repository; cloud application deployment remains unverified. Real SMTP delivery, Google Sheets, signing-key deployment and cloud deployment still require external acceptance.
 
 ## Included
 - Separate product, workflow, deployment, company, contact, downloads and privacy pages.
@@ -46,6 +46,7 @@ Trial signing uses a server-only RSA private-key path. Never put a private key, 
 
 ## Documentation
 - [Full audit and results](documentation/FINAL_AUDIT.md)
+- [v1.2 release verification](documentation/E_VMS_v1.2_RELEASE.md)
 - [Release mirroring / secrets / recovery](documentation/GITHUB_RELEASES.md)
 - [Architecture](documentation/ARCHITECTURE.md)
 - [Deployment](documentation/DEPLOYMENT.md)
@@ -57,4 +58,4 @@ Trial signing uses a server-only RSA private-key path. Never put a private key, 
 - [Troubleshooting](documentation/TROUBLESHOOTING.md)
 - [Assets and copy](documentation/ASSETS.md)
 
-The last published website source and mirrored release may be older than this working tree. Publication is intentionally deferred until review and explicit authorization.
+Release publication is separate from cloud application deployment. The repository and mirrored installers are published; the public Node service has not been verified on production hosting.

@@ -19,6 +19,7 @@ README.md is the pre-existing file updated in this checkout. Other listed applic
 - documentation/DEPLOYMENT.md
 - documentation/DESIGN_REVIEW.md
 - documentation/ENVIRONMENT.md
+- documentation/E_VMS_v1.2_RELEASE.md
 - documentation/FINAL_AUDIT.md
 - documentation/GITHUB_RELEASES.md
 - documentation/LEAD_SYSTEM.md
