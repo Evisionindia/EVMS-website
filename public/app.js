@@ -1,8 +1,29 @@
 import {jsonRequest} from './request.js';
 const base=window.EVMS_CONFIG?.apiBase||'';
 const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text)e.textContent=text;if(cls)e.className=cls;return e;};
-const menu=document.querySelector('#menu');if(menu)menu.onclick=()=>{const open=document.querySelector('nav').classList.toggle('open');menu.setAttribute('aria-expanded',String(open));};
-document.querySelectorAll('nav a').forEach(a=>a.onclick=()=>{document.querySelector('nav').classList.remove('open');menu?.setAttribute('aria-expanded','false');});
+const menu = document.querySelector('#menu');
+const mainNavigation = document.querySelector('header nav');
+if (menu && mainNavigation) {
+  mainNavigation.id = 'site-navigation';
+  menu.setAttribute('aria-controls', mainNavigation.id);
+  function setNavigation(open) {
+    mainNavigation.classList.toggle('open', open);
+    menu.setAttribute('aria-expanded', String(open));
+    menu.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+  }
+  menu.addEventListener('click', () => {
+    const open = !mainNavigation.classList.contains('open');
+    setNavigation(open);
+    if (open) mainNavigation.querySelector('a')?.focus();
+  });
+  mainNavigation.addEventListener('click', () => setNavigation(false));
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && mainNavigation.classList.contains('open')) {
+      setNavigation(false);
+      menu.focus();
+    }
+  });
+}
 function state(box,message,retry){box.replaceChildren(el('p',message));const b=el('button','Retry','button');b.onclick=retry;box.append(b);box.dataset.state='error';}
 async function features(){const box=document.querySelector('#features');box.textContent='Loading product information…';box.dataset.state='loading';
  try{const rows=await jsonRequest(base+'/api/features');if(!Array.isArray(rows)||rows.some(f=>!['name','category','description','limitation'].every(k=>typeof f[k]==='string')))throw Error();
