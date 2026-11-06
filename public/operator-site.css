@@ -1,0 +1,97 @@
+/* The operator website uses the Evision wordmark red and the blue of the E-VMS artwork. */
+.marketing {
+  --signal: #ba2632; --surface: #f5f4ef; --night: #101d2b; --steel: #425361;
+  --bg: #0c1723; --panel: #172635; --line: #354451; --blue: #accff4; --muted: #c3cbd4;
+  background: var(--bg); color: #f6f7f8;
+}
+.marketing .header, .page-index .header {
+  position: relative; inset: auto; margin: 0; transform: none; max-width: none; width: 100%;
+  height: 76px; padding: 0 max(5vw, calc((100vw - 1280px)/2)); background: #0b1016;
+  border-bottom: 1px solid #33404b; z-index: 5;
+}
+.marketing .header .brand {flex: 0 0 125px; width: 125px; height: 45px; background: #000}
+.marketing .header .brand img {width: 127px; height: 118px; top: -36px; left: 0}
+.marketing .header nav a {color: #f4f5f5; font-size: 14px}
+.marketing .header nav a:hover,.marketing .header nav a[aria-current] {color: #c7dff1}
+.marketing .header nav a:last-child {border-radius: 4px; padding: 9px 17px; border-color: #748291}
+.marketing .menu {color: white; border-color: #8694a3}
+.marketing :focus-visible {outline: 3px solid #1e85de; outline-offset: 4px}
+.marketing .button {border-radius: 5px; background: #d7eaff; color: #11253b}
+.marketing .page-heading h1>span {color: #b3cee5}
+.marketing .operator-hero {color: var(--night); background: var(--surface)}
+.operator-hero-inner {max-width: 1440px; margin: auto; display: grid; grid-template-columns: 1.08fr .92fr; align-items: stretch}
+.operator-intro {align-self: center; padding: clamp(48px,6vw,85px) clamp(24px,4vw,70px) clamp(48px,6vw,85px) clamp(30px,6vw,90px)}
+.marketing .product-name,.marketing .section-label {
+  display: flex; align-items: center; gap: 10px; margin: 0 0 25px; color: #334754;
+  font: 700 12px/1.45 "Segoe UI",sans-serif; letter-spacing: .13em;
+}
+.product-name i {width: 23px; height: 4px; background: var(--signal); display: block}
+.product-name span {opacity: .5}
+.marketing .operator-intro h1 {margin: 0; font-size: clamp(44px,5.65vw,86px); font-weight: 650; letter-spacing: -.075em; line-height: 1.03; color: #111d28}
+.marketing .operator-intro h1 em {font-family: Georgia,serif; font-weight: normal; letter-spacing: -.075em; color: #364a5c}
+.marketing .operator-lede {font-size: clamp(16px,1.36vw,20px); line-height: 1.6; margin: 24px 0 32px; max-width: 47ch; color: var(--steel)}
+.operator-actions {display: flex; align-items: center; gap: 25px; flex-wrap: wrap}
+.marketing .primary-action,.marketing .secondary-action {display: inline-flex; align-items: center; justify-content: space-between; gap: 17px; font-weight: 650; font-size: 15px; line-height: 1.35}
+.marketing .primary-action {padding: 15px 18px; background: #ae2632; color: white; border-radius: 4px}
+.marketing .primary-action:hover {background: #85202a}
+.marketing .secondary-action {color: inherit; border-bottom: 1px solid currentColor; padding: 5px 0}
+.marketing .secondary-action:hover {color: #9b2330}
+.playback-portrait {margin:0; padding:clamp(22px,3vw,42px); align-self:stretch; background:#192a3a; color:#edf4fa; display:flex; flex-direction:column; justify-content:center; gap:12px}
+.playback-portrait a {display:block; border:1px solid #53657a; border-radius:5px; overflow:hidden; box-shadow:0 12px 30px #0d192b66}
+.playback-portrait img {display:block; width:100%; height:auto}
+.playback-portrait figcaption {font-size:14px; line-height:1.5; font-weight:600}
+.playback-portrait figcaption span {color:#c8d6e4; font-weight:400}
+.onboard-copy .secondary-action {margin:0 18px 8px 0}
+.operations-strip {background: #142434; color: #f6f7f8}
+.operations-strip>div {max-width: 1360px; margin: auto; padding: 0 4vw; display: grid; grid-template-columns: repeat(4,1fr)}
+.operations-strip a {display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 24px; font-size: 15px; font-weight: 600; border-right: 1px solid #44535d}
+.operations-strip a:first-child {border-left: 1px solid #44535d}
+.operations-strip a:hover {background: #263b4d}
+.operations-strip a span {color: #c1d4e5}
+.onboard-story,.incident-story {background: #efefea; color: var(--night)}
+.onboard-grid,.incident-story,.contact-band {padding: clamp(48px,6vw,86px) max(6vw,calc((100vw - 1260px)/2)); display: grid; grid-template-columns: .9fr 1.1fr; align-items: center; gap: clamp(36px,6vw,90px)}
+.marketing .onboard-copy h2,.marketing .incident-story h2,.marketing .operator-workflow h2,.marketing .contact-band h2 {font-size: clamp(36px,3.8vw,62px); line-height: 1.06; letter-spacing: -.055em; font-weight: 600; margin: 0}
+.marketing .onboard-copy>p:not(.section-label),.marketing .incident-story div>p:not(.section-label) {color: #415361; line-height: 1.6; max-width: 49ch; margin: 18px 0 23px}
+.onboard-screen {margin: 0; padding: clamp(16px,3vw,42px); background: #dce3e6; border: 1px solid #ccd6da; border-radius: 9px}
+.onboard-screen img {width: 100%; height: auto; display: block; border-radius: 8px; box-shadow: 0 10px 25px #20344726}
+.onboard-screen figcaption {font-size: 13px; font-weight: 600; color: #344958; margin-top: 17px}
+.onboard-screen figcaption span {margin: 0 7px}
+.marketing .operator-workflow {padding-block: clamp(50px,6vw,88px)}
+.marketing .operator-workflow .showcase-head {display: block; margin-bottom: 32px}
+.marketing .operator-workflow .section-label,.marketing .incident-story .section-label {margin-bottom: 15px}
+.marketing .operator-workflow .section-label {color: #b6cfdf}
+.marketing .operator-workflow .showcase-head>p:last-child {max-width: 58ch; color: #ccd9e1}
+.marketing .contact-band {background: #172b3c; grid-template-columns: 1fr auto}
+.marketing .contact-band p {color: #c9d6df}
+.marketing .contact-band .primary-action {background: #f2f0e8; color: #13202d}
+.marketing .footer {padding-block: 38px; border-color: #4b5866}
+@media(max-width:980px){
+  .marketing .header,.page-index .header {padding-inline: 24px}
+  .marketing .header nav {gap: 15px}
+  .operator-intro {padding: 45px 28px}
+  .operations-strip>div {padding: 0}
+  .operations-strip a {padding: 18px 15px}
+}
+@media(max-width:760px){
+  .marketing .header,.page-index .header {height: 65px; padding-inline: 20px}
+  .marketing .header .menu {display: block}
+  .marketing .header nav {display: none; position: absolute; top: 100%; left: 0; right: 0; margin: 0; padding: 18px 22px; background: #101d29; z-index: 8}
+  .marketing .header nav.open {display: grid; grid-template-columns: 1fr 1fr; gap: 5px}
+  .marketing .header nav a {padding: 10px}
+  .operator-hero-inner {grid-template-columns: 1fr}
+  .operator-intro {padding: 42px 22px 36px}
+  .marketing .operator-intro h1 {font-size: clamp(48px,9.4vw,65px)}
+  .marketing .operator-lede {margin: 17px 0 22px}
+  .marketing .product-name {margin-bottom: 19px}
+  .operator-actions {gap: 16px}.operator-actions .primary-action {padding: 13px 14px}.operator-actions .secondary-action {gap: 8px}
+  .playback-portrait {padding:19px 22px;gap:8px}
+  .operations-strip>div {grid-template-columns: repeat(2,1fr)}
+  .operations-strip a {padding: 15px 18px; font-size: 13px; border-bottom: 1px solid #415260}
+  .onboard-grid,.incident-story,.marketing .contact-band {padding: 44px 22px; grid-template-columns: 1fr; gap: 27px}
+  .contact-band .primary-action {justify-self: start}
+}
+@media(max-width:370px) {
+  .operator-actions {gap: 12px}
+  .marketing .primary-action,.marketing .secondary-action {font-size: 13px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
