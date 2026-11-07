@@ -1,4 +1,5 @@
 import {github} from './github.js';
+import {enrichManifest} from './release-manifest.js';
 const installerNames=version=>new Set([`E-VMS-Pro-${version}-Windows-x64.exe`,`E-VMS-${version}-Windows-x64.exe`,`EVMS-Client-Setup-${version}-x64.exe`,`EVMS-Owner-Setup-${version}-x64.exe`]);
 export function normalizeRelease(raw,cfg){
  if(raw.draft||raw.prerelease||!/^v?\d+\.\d+(?:\.\d+)?$/.test(raw.tag_name))throw Error('Not a stable release');
@@ -26,6 +27,7 @@ export function releaseCatalog(db,cfg,fetcher=fetch){
  return cached(db,cfg.repo+':catalog:v2',async()=>{
   const all=await api.list('/repos/'+cfg.repo+'/releases');
   const releases=all.flatMap(r=>{try{return[normalizeRelease(r,cfg)];}catch{return[];}}).sort((a,b)=>Date.parse(b.publishedAt)-Date.parse(a.publishedAt));
+  for(let i=0;i<releases.length;i++)releases[i]=await enrichManifest(all.find(r=>r.tag_name===releases[i].tag),releases[i],api,cfg);
   const latest=await api.request('/repos/'+cfg.repo+'/releases/latest');
   const latestTag=latest&&!latest.draft&&!latest.prerelease?latest.tag_name:null;
   let sync={status:'unknown',message:'Release synchronization has not been verified.'};
