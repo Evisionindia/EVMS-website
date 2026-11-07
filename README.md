@@ -6,6 +6,14 @@ Repository: https://github.com/Evisionindia/EVMS-website
 ## Current state
 Implemented and tested locally. **Not production sign-off.** The stable E-VMS v1.2 source release and its v1.2 website mirror use automated provenance, size and SHA-256 checks. The website source is published on the official repository; cloud application deployment remains unverified. Real SMTP delivery, Google Sheets, signing-key deployment and cloud deployment still require external acceptance.
 
+## Release and preview boundaries
+
+The public download mirror serves Windows v1.2. The unsigned internal Windows v1.3 validation candidate and the Ubuntu V5.1 offline server are separate deliverables; neither is promoted by this website README. Platform Owner is a separate privileged application. This repository is the website, not the E-VMS runtime.
+
+For the isolated loopback preview after `npm run build`, run `node scripts/local-preview.js` and open `http://127.0.0.1:4196/`. It uses its own SQLite database under `data/local-preview-20261106/`; preserve that directory when restarting. This preview deliberately ignores deployment credentials. Standard `npm start` uses the configured application port (4100 by default). Never copy production lead databases or credentials into preview fixtures.
+
+E-Vision India maintains this repository. Existing source attribution and legal notices remain authoritative; this documentation does not grant an open-source licence.
+
 ## Included
 - Separate product, workflow, deployment, company, contact, downloads and privacy pages.
 - Interactive E-VMS-specific 2.5D workflow with static/no-JavaScript and reduced-motion support.
