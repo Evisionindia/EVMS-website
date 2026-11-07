@@ -5,6 +5,7 @@ if(!process.env.MIRROR_TOKEN)throw Error('Mirror write authentication required')
 const sourceApi=github(process.env.SOURCE_RELEASE_TOKEN),mirrorApi=github(process.env.MIRROR_TOKEN);
 const status={checked_at:new Date().toISOString(),status:'ok',synchronized:[],failed:[]};
 try{
+ if(!process.env.SOURCE_RELEASE_TOKEN){status.reason='SOURCE_READ_CREDENTIAL_MISSING';throw Error('Source read credential missing');}
  const releases=(await sourceApi.list('/repos/'+policy.sourceRepository+'/releases')).filter(eligible);
  if(!releases.length)throw Error('No eligible source releases');
  for(const summary of releases){

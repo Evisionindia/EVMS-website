@@ -1,4 +1,4 @@
-import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {syncRelease,checksum} from '../scripts/mirror-lib.js';import {releaseCatalog} from '../server/releases.js';import {openDatabase} from '../server/db.js';import {config} from '../server/config.js';
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {syncRelease,checksum} from '../scripts/mirror-lib.js';import {releaseCatalog,normalizeRelease} from '../server/releases.js';import {openDatabase} from '../server/db.js';import {config} from '../server/config.js';
 const exe=text=>{const b=Buffer.alloc(160);b.write('MZ');b.writeUInt32LE(64,60);b.write('PE\0\0',64);b.write(text,80);return b;};
 const policy=JSON.parse(fs.readFileSync('content/releases.json'));
 function fixtures(){
@@ -44,4 +44,23 @@ test('catalog unavailable, empty, malformed, cached stale and sync warning',asyn
 test('public v1.2 tag mirrors technical 1.2.0 installers and rejects mismatches',async()=>{
  const f=fixtures(),r=f.source('v1.2','1.2.0');await syncRelease(r,f.api,f.api,policy);assert.equal(f.releases[0].tag_name,'v1.2');assert.ok(f.releases[0].assets.some(a=>a.name==='E-VMS-Pro-1.2.0-Windows-x64.exe'));
  const g=fixtures(),bad=g.source('v1.2','1.3.0');await assert.rejects(()=>syncRelease(bad,g.api,g.api,policy),/tag and installer version/);
+});
+
+ test('catalog accepts approved short tag and rejects conflicting technical versions',()=>{
+ const f=fixtures(),r=f.source('v1.2','1.2.0');
+ r.html_url='https://github.com/'+policy.mirrorRepository+'/releases/tag/v1.2';
+ for(const a of r.assets)a.browser_download_url='https://github.com/'+policy.mirrorRepository+'/releases/download/v1.2/'+a.name;
+ const result=normalizeRelease(r,config({}));assert.equal(result.tag,'v1.2');assert.equal(result.assets.length,2);
+ r.tag_name='v1.3';r.html_url='https://github.com/'+policy.mirrorRepository+'/releases/tag/v1.3';
+ assert.throws(()=>normalizeRelease(r,config({})),/version/);
+ });
+
+test('catalog migration retains previously verified entries when first v2 retrieval fails',async()=>{
+ const db=openDatabase(':memory:'),cfg=config({});
+ const previous={releases:[{tag:'v1.1.1',assets:[{id:123,name:'known-installer.exe'}]}],latestTag:'v1.1.1',empty:false};
+ db.prepare('INSERT INTO release_cache VALUES(?,?,?)').run(cfg.repo+':catalog',JSON.stringify(previous),Date.now());
+ let attempts=0;const catalog=releaseCatalog(db,cfg,async()=>{attempts++;throw Error('network unavailable');});
+ const result=await catalog();assert.equal(result.stale,true);assert.deepEqual(result.releases,previous.releases);assert.equal(result.unavailable,undefined);assert.ok(attempts>0);
+ assert.equal(db.prepare('SELECT * FROM release_cache WHERE key=?').get(cfg.repo+':catalog:v2'),undefined);
+ assert.ok(db.prepare('SELECT * FROM release_cache WHERE key=?').get(cfg.repo+':catalog'));db.close();
 });
