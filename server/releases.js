@@ -1,3 +1,4 @@
+import {isClientInstaller,publicCatalog} from './public-artifacts.js';
 import {github} from './github.js';
 import {enrichManifest} from './release-manifest.js';
 const installerNames=version=>new Set([`E-VMS-Pro-${version}-Windows-x64.exe`,`E-VMS-${version}-Windows-x64.exe`,`EVMS-Client-Setup-${version}-x64.exe`,`EVMS-Owner-Setup-${version}-x64.exe`]);
@@ -9,15 +10,15 @@ export function normalizeRelease(raw,cfg){
  const versions=[...new Set((raw.assets||[]).flatMap(a=>{const m=/^(?:E-VMS(?:-Pro)?-|EVMS-(?:Client|Owner)-Setup-)(\d+\.\d+\.\d+)-(?:Windows-)?x64\.exe$/.exec(a.name);return m?[m[1]]:[];}))];
  if(versions.length!==1||!(versions[0]===tagVersion||(/^\d+\.\d+$/.test(tagVersion)&&versions[0].startsWith(tagVersion+'.'))))throw Error('Release tag and installer version do not match');
  const approvedNames=installerNames(versions[0]);
- const assets=(raw.assets||[]).filter(a=>a.state==='uploaded'&&Number.isSafeInteger(a.id)&&Number.isSafeInteger(a.size)&&a.size>0&&approvedNames.has(a.name)&&a.browser_download_url===prefix+'download/'+raw.tag_name+'/'+a.name).map(a=>({id:a.id,name:a.name,size:a.size,url:a.browser_download_url,digest:/^sha256:[a-f0-9]{64}$/.test(a.digest||'')?a.digest:null}));
+ const assets=(raw.assets||[]).filter(a=>a.state==='uploaded'&&Number.isSafeInteger(a.id)&&Number.isSafeInteger(a.size)&&a.size>0&&approvedNames.has(a.name)&&isClientInstaller(a.name)&&a.browser_download_url===prefix+'download/'+raw.tag_name+'/'+a.name).map(a=>({id:a.id,name:a.name,size:a.size,url:a.browser_download_url,digest:/^sha256:[a-f0-9]{64}$/.test(a.digest||'')?a.digest:null}));
  if(!assets.length)throw Error('No approved installers');
  const body=String(raw.body||'').split('\n\n---\nSource release:')[0].replace(/<!--[\s\S]*?-->/g,'').slice(0,6000);
- return {tag:raw.tag_name,title:String(raw.name||raw.tag_name).slice(0,200),publishedAt:raw.published_at,url:raw.html_url,notes:body,assets};
+ return publicCatalog({tag:raw.tag_name,title:String(raw.name||raw.tag_name).slice(0,200),publishedAt:raw.published_at,url:raw.html_url,notes:body,assets});
 }
 function cached(db,key,loader,previousKey){let pending,failureUntil=0;return async()=>{
  const now=Date.now(),current=db.prepare('SELECT * FROM release_cache WHERE key=?').get(key),old=current||(previousKey?db.prepare('SELECT * FROM release_cache WHERE key=?').get(previousKey):null);
- const fallback=()=>old?{...JSON.parse(old.payload),stale:true,checkedAt:new Date(old.checked).toISOString()}:{unavailable:true,message:'Release information temporarily unavailable.'};
- if(current&&now-current.checked<600000)return {...JSON.parse(old.payload),stale:false,checkedAt:new Date(old.checked).toISOString()};
+ const fallback=()=>old?{...publicCatalog(JSON.parse(old.payload)),stale:true,checkedAt:new Date(old.checked).toISOString()}:{unavailable:true,message:'Release information temporarily unavailable.'};
+ if(current&&now-current.checked<600000)return {...publicCatalog(JSON.parse(old.payload)),stale:false,checkedAt:new Date(old.checked).toISOString()};
  if(pending)return pending;if(now<failureUntil)return fallback();
  pending=(async()=>{try{const data=await loader();db.prepare('INSERT OR REPLACE INTO release_cache VALUES(?,?,?)').run(key,JSON.stringify(data),Date.now());return {...data,stale:false,checkedAt:new Date().toISOString()};}catch{failureUntil=Date.now()+60000;return fallback();}finally{pending=null;}})();return pending;
 };}

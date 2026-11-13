@@ -2,11 +2,11 @@
   "sourceRepository": "Evisionindia/E-VMS",
   "mirrorRepository": "Evisionindia/EVMS-website",
   "requiredRoles": [
-    "Pro",
-    "Owner"
+    "Pro"
   ],
   "requiredUpdaterAssets": true,
   "maxAssetBytes": 536870912,
   "mappingAsset": "evms-mirror.json",
-  "syncTag": "release-sync-status"
+  "syncTag": "release-sync-status",
+  "publicArtifactPolicy": "explicit-client-only-v1"
 }

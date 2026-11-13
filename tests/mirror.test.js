@@ -14,9 +14,9 @@ function fixtures(){
  return{api,source,releases,data,uploads:()=>uploads};
 }
 test('source → verified mirror → catalog → download; next version, repeat, notes edit',async()=>{
- const f=fixtures(),a=f.source('v1.1.0');await syncRelease(a,f.api,f.api,policy);assert.equal(f.releases.length,1);assert.equal(f.releases[0].draft,false);assert.equal(f.uploads(),7);
- await syncRelease(a,f.api,f.api,policy);assert.equal(f.uploads(),7);assert.equal(f.releases.length,1);
- a.body='Corrected release notes';await syncRelease(a,f.api,f.api,policy);assert.equal(f.uploads(),7);assert.match(f.releases[0].body,/Corrected/);
+ const f=fixtures(),a=f.source('v1.1.0');await syncRelease(a,f.api,f.api,policy);assert.equal(f.releases.length,1);assert.equal(f.releases[0].draft,false);assert.equal(f.uploads(),4);
+ await syncRelease(a,f.api,f.api,policy);assert.equal(f.uploads(),4);assert.equal(f.releases.length,1);
+ a.body='Corrected release notes';await syncRelease(a,f.api,f.api,policy);assert.equal(f.uploads(),4);assert.doesNotMatch(f.releases[0].body,/Corrected/);assert.match(f.releases[0].body,/Customer operator client/);
  const b=f.source('v1.1.1');await syncRelease(b,f.api,f.api,policy);assert.equal(f.releases.length,2);
  const db=openDatabase(':memory:'),cfg=config({});
  const catalog=releaseCatalog(db,cfg,async url=>({ok:true,status:200,json:async()=>String(url).endsWith('/latest')?f.releases[1]:f.releases}));
@@ -26,10 +26,10 @@ test('source → verified mirror → catalog → download; next version, repeat,
 });
 test('missing upload recovered, unrelated files excluded, broken/changed assets rejected',async()=>{
  const f=fixtures(),r=f.source('v1.1.0');r.assets.push({id:99,name:'private.sqlite',state:'uploaded',size:9});await syncRelease(r,f.api,f.api,policy);assert.equal(f.releases[0].assets.some(a=>a.name==='private.sqlite'),false);
- const ownerName='E-VMS-1.1.0-Windows-x64.exe';const lost=f.releases[0].assets.find(a=>a.name===ownerName);f.releases[0].assets=f.releases[0].assets.filter(a=>a!==lost);await syncRelease(r,f.api,f.api,policy);assert.equal(f.releases[0].assets.filter(a=>a.name===ownerName).length,1);
+ const ownerName='E-VMS-Pro-1.1.0-Windows-x64.exe';const lost=f.releases[0].assets.find(a=>a.name===ownerName);f.releases[0].assets=f.releases[0].assets.filter(a=>a!==lost);await syncRelease(r,f.api,f.api,policy);assert.equal(f.releases[0].assets.filter(a=>a.name===ownerName).length,1);
  f.data.set(r.assets[0].id,Buffer.from('MZ changed'));await assert.rejects(()=>syncRelease(r,f.api,f.api,policy),/verification|checksum/);
  const g=fixtures(),bad=g.source('v2.0.0');g.data.set(bad.assets[0].id,Buffer.alloc(bad.assets[0].size));await assert.rejects(()=>syncRelease(bad,g.api,g.api,policy),/verification/);assert.equal(g.releases.length,0);
- const incomplete=g.source('v3.0.0');incomplete.assets.pop();await assert.rejects(()=>syncRelease(incomplete,g.api,g.api,policy),/required/);
+ const incomplete=g.source('v3.0.0');incomplete.assets=incomplete.assets.filter(a=>a.name!=='client.yml');await assert.rejects(()=>syncRelease(incomplete,g.api,g.api,policy),/required/);
 });
 test('unrelated existing tag never overwritten; changed published bytes require new version',async()=>{
  const f=fixtures(),r=f.source('v1.1.0');f.releases.push({id:999,tag_name:r.tag_name,body:'Not ours',assets:[]});await assert.rejects(()=>syncRelease(r,f.api,f.api,policy),/another release/);
@@ -63,4 +63,18 @@ test('catalog migration retains previously verified entries when first v2 retrie
  const result=await catalog();assert.equal(result.stale,true);assert.deepEqual(result.releases,previous.releases);assert.equal(result.unavailable,undefined);assert.ok(attempts>0);
  assert.equal(db.prepare('SELECT * FROM release_cache WHERE key=?').get(cfg.repo+':catalog:v2'),undefined);
  assert.ok(db.prepare('SELECT * FROM release_cache WHERE key=?').get(cfg.repo+':catalog'));db.close();
+});
+
+import {isClientInstaller,isClientAsset,publicCatalog} from '../server/public-artifacts.js';
+test('public allowlist excludes Owner, ambiguous packages and old-cache payloads',()=>{
+ for(const name of ['E-VMS-1.2.0-Windows-x64.exe','EVMS-Owner-Setup-1.1.1-x64.exe','owner.yml','E-VMS-1.2.0-Windows-x64.exe.blockmap','unknown.exe'])assert.equal(isClientAsset(name),false,name);
+ assert.equal(isClientInstaller('E-VMS-Pro-1.2.0-Windows-x64.exe'),true);
+ assert.equal(isClientInstaller('EVMS-Client-Setup-1.1.1-x64.exe'),true);
+ const old={releases:[{notes:'Owner https://private/owner.exe',assets:[{name:'EVMS-Owner-Setup-1.1.1-x64.exe',url:'owner'},{name:'EVMS-Client-Setup-1.1.1-x64.exe',url:'client'}]}]};
+ assert.doesNotMatch(JSON.stringify(publicCatalog(old)),/Owner|owner\.exe/);assert.equal(publicCatalog(old).releases[0].assets.length,1);
+});
+test('mirror cannot reintroduce privileged or unknown packages even under a changed policy',async()=>{
+ const f=fixtures(),r=f.source('v1.2','1.2.0');await assert.rejects(()=>syncRelease(r,f.api,f.api,{...policy,requiredRoles:['Pro','Owner']}),/only explicit/);
+ await syncRelease(r,f.api,f.api,policy);assert.deepEqual(f.releases[0].assets.map(a=>a.name).sort(),['E-VMS-Pro-1.2.0-Windows-x64.exe','E-VMS-Pro-1.2.0-Windows-x64.exe.blockmap','client.yml','evms-mirror.json'].sort());
+ const mapping=JSON.parse((await f.api.bytes('',f.releases[0].assets.find(a=>a.name==='evms-mirror.json').id)).toString());assert.equal(mapping.assets.length,3);assert.ok(mapping.assets.every(a=>isClientAsset(a.name)));
 });
